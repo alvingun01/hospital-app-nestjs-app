@@ -18,7 +18,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 export class PatientProfilesController {
     constructor(
         private readonly patientProfilesService: PatientProfilesService,
-    ) { }
+    ) {}
 
     @Post()
     create(@Body() createPatientProfileDto: CreatePatientProfileDto) {

@@ -18,7 +18,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 export class DoctorProfilesController {
     constructor(
         private readonly doctorProfilesService: DoctorProfilesService,
-    ) { }
+    ) {}
 
     @Post()
     create(@Body() createDoctorProfileDto: CreateDoctorProfileDto) {

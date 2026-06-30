@@ -9,18 +9,24 @@ import {
     Req,
     UseGuards,
 } from '@nestjs/common';
-import { AppointmentsService } from './appointments.service';
+import { AppointmentServices } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { CreateAppointmentResponseDto } from './dto/create-appointment-response.dto';
 import { AppointmentResponseDto } from './dto/appointment-response.dto';
 import { UpdateAppointmentResponseDto } from './dto/update-appointment-response.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { AppointmentServicesDoctorImpl } from './core/appointment-services-doctor-impl';
+import { AppointmentServicesPatientImpl } from './core/appointment-services-patient-impl';
 
 @Controller('appointments')
 @UseGuards(JwtAuthGuard)
 export class AppointmentsController {
-    constructor(private readonly appointmentsService: AppointmentsService) {}
+    constructor(
+        private readonly appointmentsService: AppointmentServices,
+        private readonly appointmentServicesDoctorImpl: AppointmentServicesDoctorImpl,
+        private readonly appointmentServicesPatientImpl: AppointmentServicesPatientImpl,
+    ) { }
 
     @Post()
     async create(
@@ -33,7 +39,15 @@ export class AppointmentsController {
     async findAll(
         @Req() req: { user: { sub: number; role: string } },
     ): Promise<AppointmentResponseDto[]> {
-        return this.appointmentsService.findAll(req.user);
+        let service: AppointmentServices;
+        if (req.user.role == 'patient') {
+            service = this.appointmentServicesPatientImpl;
+        } else if (req.user.role == 'doctor') {
+            service = this.appointmentServicesDoctorImpl;
+        } else {
+            throw new Error('Invalid user');
+        }
+        return service.findAll(req.user);
     }
 
     @Get(':id')

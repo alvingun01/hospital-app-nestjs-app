@@ -1,24 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAppointmentDto } from './dto/create-appointment.dto';
-import { UpdateAppointmentDto } from './dto/update-appointment.dto';
-import { CreateAppointmentResponseDto } from './dto/create-appointment-response.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Appointment } from './entities/appointment.entity';
 import { Repository } from 'typeorm';
-
-import { PatientProfile } from '../patient-profiles/entities/patient-profile.entity';
-import { DoctorProfile } from '../doctor-profiles/entities/doctor-profile.entity';
+import { PatientProfile } from 'src/patient-profiles/entities/patient-profile.entity';
+import { DoctorProfile } from 'src/doctor-profiles/entities/doctor-profile.entity';
+import { CreateAppointmentDto } from 'src/appointments/dto/create-appointment.dto';
+import { CreateAppointmentResponseDto } from 'src/appointments/dto/create-appointment-response.dto';
+import { UpdateAppointmentDto } from 'src/appointments/dto/update-appointment.dto';
+import { Appointment } from 'src/appointments/entities/appointment.entity';
 
 @Injectable()
-export class AppointmentsService {
+export abstract class AppointmentServices {
     constructor(
         @InjectRepository(Appointment)
-        private readonly appointmentRepository: Repository<Appointment>,
+        protected readonly appointmentRepository: Repository<Appointment>,
         @InjectRepository(PatientProfile)
-        private readonly patientProfileRepository: Repository<PatientProfile>,
+        protected readonly patientProfileRepository: Repository<PatientProfile>,
         @InjectRepository(DoctorProfile)
-        private readonly doctorProfileRepository: Repository<DoctorProfile>,
-    ) {}
+        protected readonly doctorProfileRepository: Repository<DoctorProfile>,
+    ) { }
     async create(
         createAppointmentDto: CreateAppointmentDto,
     ): Promise<CreateAppointmentResponseDto> {
@@ -39,54 +38,12 @@ export class AppointmentsService {
         return savedAppointment;
     }
 
-    async findAll(user: { sub: number; role: string }) {
-        if (user.role === 'patient') {
-            const patientProfile = await this.patientProfileRepository.findOne({
-                where: { user: { id: user.sub } },
-            });
-            if (!patientProfile) {
-                return [];
-            }
-            return this.appointmentRepository.find({
-                where: { patient: { id: patientProfile.id } },
-                relations: {
-                    patient: { user: true },
-                    doctor: { user: true },
-                },
-            });
-        }
+    abstract findAll(user: {
+        sub: number;
+        role: string;
+    }): Promise<Appointment[]>;
 
-        if (user.role === 'doctor') {
-            const doctorProfile = await this.doctorProfileRepository.findOne({
-                where: { user: { id: user.sub } },
-            });
-            if (!doctorProfile) {
-                return [];
-            }
-            return this.appointmentRepository.find({
-                where: { doctor: { id: doctorProfile.id } },
-                relations: {
-                    patient: { user: true },
-                    doctor: { user: true },
-                },
-            });
-        }
-
-        return this.appointmentRepository.find({
-            relations: {
-                patient: { user: true },
-                doctor: { user: true },
-            },
-        });
-    }
-
-    async findOne(id: number) {
-        const appointment = await this.appointmentRepository.findOneBy({ id });
-        if (!appointment) {
-            throw new Error('Appointment not found');
-        }
-        return appointment;
-    }
+    abstract findOne(id: number): Promise<Appointment>;
 
     async update(id: number, updateAppointmentDto: UpdateAppointmentDto) {
         const appointment = await this.findOne(id);

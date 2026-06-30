@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
-import { AppointmentsService } from './appointments.service';
+import { AppointmentServices } from './appointments.service';
 import { AppointmentsController } from './appointments.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Appointment } from './entities/appointment.entity';
 import { PatientProfilesModule } from '../patient-profiles/patient-profiles.module';
 import { DoctorProfilesModule } from '../doctor-profiles/doctor-profiles.module';
+import { AppointmentServicesDoctorImpl } from './core/appointment-services-doctor-impl';
+import { AppointmentServicesPatientImpl } from './core/appointment-services-patient-impl';
 
 @Module({
     imports: [
@@ -13,7 +15,19 @@ import { DoctorProfilesModule } from '../doctor-profiles/doctor-profiles.module'
         DoctorProfilesModule,
     ],
     controllers: [AppointmentsController],
-    providers: [AppointmentsService],
-    exports: [AppointmentsService, TypeOrmModule],
+    providers: [
+        AppointmentServicesDoctorImpl,
+        AppointmentServicesPatientImpl,
+        {
+            provide: AppointmentServices,
+            useClass: AppointmentServicesPatientImpl,
+        },
+    ],
+    exports: [
+        AppointmentServices,
+        AppointmentServicesDoctorImpl,
+        AppointmentServicesPatientImpl,
+        TypeOrmModule,
+    ],
 })
-export class AppointmentsModule {}
+export class AppointmentsModule { }
