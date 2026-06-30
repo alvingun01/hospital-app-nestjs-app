@@ -1,0 +1,36 @@
+import {
+    Column,
+    Entity,
+    PrimaryGeneratedColumn,
+    OneToOne,
+    JoinColumn,
+} from 'typeorm';
+import { User } from '../../users/entities/user.entity';
+
+@Entity('patient_profiles')
+export class PatientProfile {
+    @PrimaryGeneratedColumn()
+    id: number;
+
+    @OneToOne(() => User)
+    @JoinColumn()
+    user: User;
+
+    @Column()
+    phone: string;
+
+    @Column()
+    address: string;
+
+    @Column()
+    city: string;
+
+    @Column()
+    state: string;
+
+    @Column()
+    zip_code: string;
+
+    @Column()
+    country: string;
+}
